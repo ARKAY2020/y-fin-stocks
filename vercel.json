@@ -1,23 +1,17 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "api/*.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "public/**/*",
-            "use": "@vercel/static"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/api/filter.py"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/public/$1"
-        }
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "/api/filter.py"
+      },
+      {
+        "source": "/(.*\\.(?:css|js|map|gif|png|jpg|jpeg|svg|eot|otf|ttf|woff|woff2))",
+        "destination": "/public/$1"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/public/index.html"
+      }
     ]
 }
