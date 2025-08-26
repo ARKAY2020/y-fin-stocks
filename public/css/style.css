@@ -2,40 +2,39 @@
  * Tailwind CSS को यहाँ से आयात (import) करें।
  * यह सुनिश्चित करता है कि सभी Tailwind यूटिलिटी क्लास उपलब्ध हैं।
  */
- @tailwind base;
- @tailwind components;
- @tailwind utilities;
- 
- /*
-  * कस्टम फ़ॉन्ट और अन्य शैलियाँ (styles) जो Tailwind में नहीं हैं।
-  */
- @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
- 
- body {
-     font-family: 'Inter', sans-serif;
- }
- 
- /*
-  * सक्रिय (active) टैब बटन के लिए स्टाइल।
-  */
- .tab-btn.active {
-     background-color: #fff;
-     color: #2563eb;
-     border-bottom: 2px solid #2563eb;
-     font-weight: 700;
- }
- 
- /*
-  * सक्रिय फ़िल्टर सेक्शन को दिखाने के लिए स्टाइल।
-  */
- .filter-section.active {
-     display: block;
- }
- 
- /*
-  * छुपे हुए (hidden) सेक्शन के लिए स्टाइल।
-  */
- .filter-section.hidden {
-     display: none;
- }
- 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * कस्टम फ़ॉन्ट और अन्य शैलियाँ (styles) जो Tailwind में नहीं हैं।
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/*
+ * सक्रिय (active) टैब बटन के लिए स्टाइल।
+ */
+.tab-btn.active {
+    background-color: #fff;
+    color: #2563eb;
+    border-bottom: 2px solid #2563eb;
+    font-weight: 700;
+}
+
+/*
+ * सक्रिय फ़िल्टर सेक्शन को दिखाने के लिए स्टाइल।
+ */
+.filter-section.active {
+    display: block;
+}
+
+/*
+ * छुपे हुए (hidden) सेक्शन के लिए स्टाइल।
+ */
+.filter-section.hidden {
+    display: none;
+}
