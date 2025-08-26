@@ -16,12 +16,8 @@
             "dest": "/api/filter.py"
         },
         {
-            "src": "/(.*\\.(?:css|js|map|gif|png|jpg|jpeg|svg|eot|otf|ttf|woff|woff2))",
-            "dest": "/public/$1"
-        },
-        {
             "src": "/(.*)",
-            "dest": "/public/index.html"
+            "dest": "/public/$1"
         }
     ]
 }
