@@ -1,0 +1,13 @@
+{
+    "name": "lucksporty-stock-app",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+      "start": "npx tailwindcss -i ./public/css/tailwind-input.css -o ./public/css/style.css --minify",
+      "build": "npx tailwindcss -i ./public/css/tailwind-input.css -o ./public/css/style.css --minify"
+    },
+    "devDependencies": {
+      "tailwindcss": "^3.0.0"
+    }
+  }
+  
