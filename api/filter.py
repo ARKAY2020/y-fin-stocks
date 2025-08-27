@@ -47,7 +47,7 @@ class handler(BaseHTTPRequestHandler):
             return df
         except Exception as e:
             print(f"Error fetching data for {symbol}: {e}")
-            return None
+            return pd.DataFrame() # अगर कोई एरर आता है, तो एक खाली डेटाफ़्रेम वापस करें
 
     def run_intraday_filter(self):
         # यहाँ आप NSE स्टॉक सिंबल की अपनी सूची जोड़ सकते हैं।
@@ -62,7 +62,8 @@ class handler(BaseHTTPRequestHandler):
 
         for stock in stocks:
             df = self.get_stock_data(stock, period, interval)
-            if df is not None and len(df) > 1:
+            # जाँच करें कि डेटाफ़्रेम खाली तो नहीं है
+            if not df.empty and len(df) > 1:
                 # 5 मिनट के WMA और वॉल्यूम ब्रेकआउट की जाँच करें
                 latest_close = df['Close'].iloc[-1]
                 latest_open = df['Open'].iloc[-1]
