@@ -3,8 +3,8 @@
 
 from http.server import BaseHTTPRequestHandler
 import json
+import requests
 import pandas as pd
-import yfinance as yf
 from datetime import datetime, timedelta
 
 # यह Vercel के लिए एक कस्टम HTTP हैंडलर है।
@@ -40,31 +40,34 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(results).encode('utf-8'))
 
     def get_stock_data(self, symbol, period, interval):
+        # हम यहाँ सीधे Yahoo Finance के बजाय NSE की वेबसाइट से डेटा लाने का प्रयास करेंगे
         try:
-            # yfinance का उपयोग करके डेटा प्राप्त करें
-            ticker = yf.Ticker(symbol)
-            df = ticker.history(period=period, interval=interval)
+            # यह एक सामान्य NSE API का URL है, लेकिन यह बदल सकता है।
+            url = f"https://www.nseindia.com/api/chart-databy-symbol?symbol={symbol}&resolution=15" # 15-minute interval
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status() # HTTP एरर के लिए जाँच करें
+            data = response.json()
+            
+            # यदि डेटा मिलता है, तो इसे एक pandas डेटाफ़्रेम में बदलें
+            candles = data['g']
+            df = pd.DataFrame(candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+            df.set_index('Timestamp', inplace=True)
             return df
         except Exception as e:
-            print(f"Error fetching data for {symbol}: {e}")
-            return pd.DataFrame() # अगर कोई एरर आता है, तो एक खाली डेटाफ़्रेम वापस करें
+            print(f"Error fetching data for {symbol} from NSE: {e}")
+            return pd.DataFrame()
 
     def run_intraday_filter(self):
         # यहाँ आप NSE स्टॉक सिंबल की अपनी सूची जोड़ सकते हैं।
-        # उदाहरण के लिए, मैंने कुछ लोकप्रिय भारतीय स्टॉक्स जोड़े हैं।
-        # ध्यान दें: yfinance के लिए NSE सिंबल में '.NS' लगाना ज़रूरी है।
-        stocks = ["RELIANCE.NS", "TCS.NS", "HDFC.NS", "INFY.NS", "ICICIBANK.NS"]
+        stocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"] # NSE सिंबल में '.NS' नहीं है
         filtered_stocks = []
 
-        # इंट्राडे के लिए 1 दिन का डेटा 5 मिनट के अंतराल पर
-        period = "1d"
-        interval = "5m"
-
         for stock in stocks:
-            df = self.get_stock_data(stock, period, interval)
-            # जाँच करें कि डेटाफ़्रेम खाली तो नहीं है
+            df = self.get_stock_data(stock, None, None) # period and interval are handled in get_stock_data
+            
             if not df.empty and len(df) > 1:
-                # 5 मिनट के WMA और वॉल्यूम ब्रेकआउट की जाँच करें
                 latest_close = df['Close'].iloc[-1]
                 latest_open = df['Open'].iloc[-1]
                 latest_volume = df['Volume'].iloc[-1]
