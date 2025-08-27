@@ -4,63 +4,216 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>स्टॉक फ़िल्टर ऐप</title>
-    <!-- CSS फ़ाइल को लिंक करें -->
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 24px;
+            text-align: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .tabs {
+            display: flex;
+            background-color: #e9ecef;
+            border-bottom: 2px solid #dee2e6;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex-grow: 1;
+            padding: 16px 0;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            border: none;
+            background-color: transparent;
+        }
+        .tab-btn:hover {
+            background-color: #d1d8df;
+        }
+        .tab-btn.active {
+            background-color: #fff;
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+            font-weight: 700;
+        }
+        .filter-section {
+            padding: 24px;
+            display: none;
+        }
+        .filter-section.active {
+            display: block;
+        }
+        .run-button {
+            width: 100%;
+            padding: 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: background-color 0.3s;
+        }
+        .run-button:hover {
+            background-color: #218838;
+        }
+        .results-section {
+            padding: 24px;
+            background-color: #f8f9fa;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        .results-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .result-item {
+            background-color: #fff;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .loading-text, .no-results-text {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
-
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl overflow-hidden">
-        
-        <!-- Header Section -->
-        <div class="bg-blue-600 text-white p-6 rounded-t-xl text-center">
-            <h1 class="text-3xl font-bold">स्टॉक फ़िल्टर</h1>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h2>स्टॉक फ़िल्टर</h2>
         </div>
         
-        <!-- Tab Buttons -->
-        <div class="flex bg-gray-200 border-b border-gray-300">
-            <button class="tab-btn active px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-300 transition-all duration-200 w-1/4 rounded-b-none" onclick="showTab('intraday', this)">इंट्राडे</button>
-            <button class="tab-btn px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-300 transition-all duration-200 w-1/4" onclick="showTab('swing', this)">स्विंग</button>
-            <button class="tab-btn px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-300 transition-all duration-200 w-1/4" onclick="showTab('longterm', this)">लॉन्ग टर्म</button>
-            <button class="tab-btn px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-300 transition-all duration-200 w-1/4" onclick="showTab('chartpattern', this)">चार्ट पैटर्न</button>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('intraday', this)">इंट्राडे</button>
+            <button class="tab-btn" onclick="showTab('swing', this)">स्विंग</button>
+            <button class="tab-btn" onclick="showTab('longterm', this)">लॉन्ग टर्म</button>
+            <button class="tab-btn" onclick="showTab('chartpattern', this)">चार्ट पैटर्न</button>
         </div>
 
-        <!-- Filter Sections (Content) -->
-        <div id="intraday" class="filter-section p-6 active">
-            <h2 class="text-xl font-semibold mb-2 text-gray-800">5 मिनट WMA और वॉल्यूम ब्रेकआउट</h2>
-            <p class="text-sm text-gray-600">यह फ़िल्टर उन स्टॉक्स को ढूंढेगा जो इंट्राडे में बुलिश हैं और वॉल्यूम के साथ ब्रेकआउट दे रहे हैं।</p>
-            <button class="run-button mt-4 w-full bg-green-500 text-white py-3 font-bold rounded-lg shadow-md hover:bg-green-600 transition-all duration-300" onclick="runFilter('intraday')">फ़िल्टर चलाएँ</button>
+        <div id="intraday" class="filter-section active">
+            <h3>5 मिनट WMA और वॉल्यूम ब्रेकआउट</h3>
+            <p>यह फ़िल्टर उन स्टॉक्स को ढूंढेगा जो इंट्राडे में बुलिश हैं और वॉल्यूम के साथ ब्रेकआउट दे रहे हैं।</p>
+            <button class="run-button" onclick="runFilter('intraday')">फ़िल्टर चलाएँ</button>
         </div>
 
-        <div id="swing" class="filter-section p-6 hidden">
-            <h2 class="text-xl font-semibold mb-2 text-gray-800">गोल्डन क्रॉस (20-EMA, 50-EMA)</h2>
-            <p class="text-sm text-gray-600">यह फ़िल्टर उन स्टॉक्स की पहचान करेगा जो डेली चार्ट पर शॉर्ट-टर्म से मीडियम-टर्म के लिए बुलिश हैं।</p>
-            <button class="run-button mt-4 w-full bg-green-500 text-white py-3 font-bold rounded-lg shadow-md hover:bg-green-600 transition-all duration-300" onclick="runFilter('swing')">फ़िल्टर चलाएँ</button>
+        <div id="swing" class="filter-section">
+            <h3>डेली WMA और वॉल्यूम</h3>
+            <p>यह फ़िल्टर उन स्टॉक्स की पहचान करेगा जो डेली चार्ट पर शॉर्ट-टर्म से मीडियम-टर्म के लिए बुलिश हैं।</p>
+            <button class="run-button" onclick="runFilter('swing')">फ़िल्टर चलाएँ</button>
         </div>
 
-        <div id="longterm" class="filter-section p-6 hidden">
-            <h2 class="text-xl font-semibold mb-2 text-gray-800">वीकली 200-EMA ब्रेकआउट</h2>
-            <p class="text-sm text-gray-600">यह फ़िल्टर उन स्टॉक्स को ढूंढेगा जो लॉन्ग-टर्म निवेश के लिए उपयुक्त हैं।</p>
-            <button class="run-button mt-4 w-full bg-green-500 text-white py-3 font-bold rounded-lg shadow-md hover:bg-green-600 transition-all duration-300" onclick="runFilter('longterm')">फ़िल्टर चलाएँ</button>
+        <div id="longterm" class="filter-section">
+            <h3>वीकली WMA और वॉल्यूम</h3>
+            <p>यह फ़िल्टर उन स्टॉक्स को ढूंढेगा जो लॉन्ग-टर्म निवेश के लिए उपयुक्त हैं।</p>
+            <button class="run-button" onclick="runFilter('longterm')">फ़िल्टर चलाएँ</button>
         </div>
 
-        <div id="chartpattern" class="filter-section p-6 hidden">
-            <h2 class="text-xl font-semibold mb-2 text-gray-800">कंसोलिडेशन और ब्रेकआउट पैटर्न</h2>
-            <p class="text-sm text-gray-600">यह फ़िल्टर उन स्टॉक्स को ढूंढेगा जो एक डाउनट्रेंड के बाद कंसोलिडेशन से बुलिश ब्रेकआउट दे रहे हैं।</p>
-            <button class="run-button mt-4 w-full bg-green-500 text-white py-3 font-bold rounded-lg shadow-md hover:bg-green-600 transition-all duration-300" onclick="runFilter('chartpattern')">फ़िल्टर चलाएँ</button>
+        <div id="chartpattern" class="filter-section">
+            <h3>कंसोलिडेशन और ब्रेकआउट पैटर्न</h3>
+            <p>यह फ़िल्टर उन स्टॉक्स को ढूंढेगा जो एक डाउनट्रेंड के बाद कंसोलिडेशन से बुलिश ब्रेकआउट दे रहे हैं।</p>
+            <button class="run-button" onclick="runFilter('chartpattern')">फ़िल्टर चलाएँ</button>
         </div>
-
-        <!-- Results Section -->
-        <div class="results-section p-6 bg-gray-50 border-t border-gray-200">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">परिणाम</h2>
-            <div id="resultsList" class="results-list">
-                <p class="text-center text-gray-500 italic">कृपया फ़िल्टर चलाएँ।</p>
-            </div>
+        
+        <div class="results-section">
+            <h3>परिणाम</h3>
+            <ul id="resultsList" class="results-list">
+                <p class="no-results-text">कोई स्टॉक नहीं मिला। फ़िल्टर चलाएँ।</p>
+            </ul>
         </div>
-
     </div>
 
-    <!-- JS फ़ाइल को लिंक करें -->
-    <script src="js/main.js"></script>
+    <script>
+        // टैब बदलने के लिए फ़ंक्शन
+        function showTab(tabId, element) {
+            document.querySelectorAll('.filter-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
 
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // फ़िल्टर चलाने के लिए मुख्य फ़ंक्शन
+        async function runFilter(filterType) {
+            let resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '<p class="loading-text">फ़िल्टर चल रहा है... कृपया प्रतीक्षा करें।</p>';
+
+            try {
+                // सीधे अपने Vercel प्रोजेक्ट में मौजूद Python बैकएंड को कॉल करें
+                const response = await fetch(`/api/filter?type=${filterType}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const results = await response.json();
+                
+                displayResults(results);
+
+            } catch (error) {
+                console.error("बैकएंड से डेटा लाने में त्रुटि हुई:", error);
+                resultsList.innerHTML = '<p class="no-results-text">डेटा लाने में त्रुटि हुई। कृपया सुनिश्चित करें कि आपका Python बैकएंड Vercel पर सही से चल रहा है।</p>';
+            }
+        }
+
+        // परिणामों को UI में दिखाने के लिए फ़ंक्शन
+        function displayResults(results) {
+            let resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            if (results.length > 0) {
+                results.forEach(stock => {
+                    let listItem = document.createElement('li');
+                    listItem.className = 'result-item';
+                    listItem.textContent = stock;
+                    resultsList.appendChild(listItem);
+                });
+            } else {
+                resultsList.innerHTML = '<p class="no-results-text">कोई स्टॉक नहीं मिला।</p>';
+            }
+        }
+    </script>
 </body>
 </html>
