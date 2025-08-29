@@ -42,7 +42,7 @@ class handler(BaseHTTPRequestHandler):
     def get_stock_data(self, symbol, period="1mo", interval="1d"):
         # Alpha Vantage API का उपयोग करें (NSE के लिए .NS जोड़ें)
         try:
-            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_{interval.upper()}&symbol={symbol}.NS&apikey=YOUR_API_KEY"
+            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_{interval.upper()}&symbol={symbol}.NSWPK5SOY3Z9NO8KBM"
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()  # HTTP एरर के लिए जाँच करें
@@ -143,3 +143,4 @@ class handler(BaseHTTPRequestHandler):
                 if df['Close'].iloc[-1] > highs.iloc[-2] and df['Volume'].iloc[-1] > df['Volume'].mean():
                     filtered_stocks.append(stock)
         return filtered_stocks if filtered_stocks else ["चार्ट पैटर्न फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
+
