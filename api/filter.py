@@ -39,34 +39,49 @@ class handler(BaseHTTPRequestHandler):
         # JSON में परिणाम भेजें
         self.wfile.write(json.dumps(results).encode('utf-8'))
 
-    def get_stock_data(self, symbol, period, interval):
-        # हम यहाँ सीधे Yahoo Finance के बजाय NSE की वेबसाइट से डेटा लाने का प्रयास करेंगे
+    def get_stock_data(self, symbol, period="1mo", interval="1d"):
+        # Alpha Vantage API का उपयोग करें (NSE के लिए .NS जोड़ें)
         try:
-            # यह एक सामान्य NSE API का URL है, लेकिन यह बदल सकता है।
-            url = f"https://www.nseindia.com/api/chart-databy-symbol?symbol={symbol}&resolution=15" # 15-minute interval
+            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_{interval.upper()}&symbol={symbol}.NS&apikey=YOUR_API_KEY"
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status() # HTTP एरर के लिए जाँच करें
+            response.raise_for_status()  # HTTP एरर के लिए जाँच करें
             data = response.json()
-            
-            # यदि डेटा मिलता है, तो इसे एक pandas डेटाफ़्रेम में बदलें
-            candles = data['g']
-            df = pd.DataFrame(candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
-            df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+
+            # डेटा को pandas डेटाफ़्रेम में बदलें
+            if interval == "1d":
+                time_series = data.get('Time Series (Daily)', {})
+            elif interval == "1wk":
+                time_series = data.get('Weekly Adjusted Time Series', {})
+            else:
+                time_series = {}
+
+            if not time_series:
+                print(f"No data found for {symbol}")
+                return pd.DataFrame()
+
+            df = pd.DataFrame.from_dict(time_series, orient='index')
+            df = df.rename(columns={
+                '1. open': 'Open',
+                '2. high': 'High',
+                '3. low': 'Low',
+                '4. close': 'Close',
+                '5. volume': 'Volume'
+            })
+            df['Timestamp'] = pd.to_datetime(df.index)
             df.set_index('Timestamp', inplace=True)
+            df = df.astype(float)
             return df
         except Exception as e:
-            print(f"Error fetching data for {symbol} from NSE: {e}")
+            print(f"Error fetching data for {symbol}: {e}")
             return pd.DataFrame()
 
     def run_intraday_filter(self):
-        # यहाँ आप NSE स्टॉक सिंबल की अपनी सूची जोड़ सकते हैं।
-        stocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"] # NSE सिंबल में '.NS' नहीं है
+        stocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"]
         filtered_stocks = []
 
         for stock in stocks:
-            df = self.get_stock_data(stock, None, None) # period and interval are handled in get_stock_data
-            
+            df = self.get_stock_data(stock, period="1d", interval="15min")  # 15-minute data
             if not df.empty and len(df) > 1:
                 latest_close = df['Close'].iloc[-1]
                 latest_open = df['Open'].iloc[-1]
@@ -84,16 +99,47 @@ class handler(BaseHTTPRequestHandler):
                 
                 if is_bullish and is_volume_breakout:
                     filtered_stocks.append(stock)
-        return filtered_stocks
+        return filtered_stocks if filtered_stocks else ["इंट्राडे फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
 
     def run_swing_filter(self):
-        # स्विंग ट्रेडिंग के लिए लॉजिक यहाँ डालें।
-        return ["स्विंग ट्रेडिंग फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
+        # स्विंग ट्रेडिंग के लिए लॉजिक (स्थायी रूप से 1 सप्ताह का डेटा)
+        stocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"]
+        filtered_stocks = []
+
+        for stock in stocks:
+            df = self.get_stock_data(stock, period="1wk", interval="1d")
+            if not df.empty and len(df) > 5:
+                latest_close = df['Close'].iloc[-1]
+                prev_close = df['Close'].iloc[-2]
+                if latest_close > prev_close * 1.02:  # 2% ऊपर
+                    filtered_stocks.append(stock)
+        return filtered_stocks if filtered_stocks else ["स्विंग ट्रेडिंग फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
 
     def run_longterm_filter(self):
-        # लॉन्ग-टर्म निवेश के लिए लॉजिक यहाँ डालें।
-        return ["लॉन्ग टर्म निवेश फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
+        # लॉन्ग-टर्म निवेश के लिए लॉजिक (1 साल का डेटा)
+        stocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"]
+        filtered_stocks = []
+
+        for stock in stocks:
+            df = self.get_stock_data(stock, period="1y", interval="1wk")
+            if not df.empty and len(df) > 20:
+                wma = df['Close'].rolling(window=20, weights=range(1, 21)).mean().iloc[-1]
+                latest_close = df['Close'].iloc[-1]
+                avg_volume = df['Volume'].mean()
+                if latest_close > wma * 1.05 and avg_volume > 100000:  # 5% WMA ऊपर और न्यूनतम वॉल्यूम
+                    filtered_stocks.append(stock)
+        return filtered_stocks if filtered_stocks else ["लॉंग टर्म निवेश फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
 
     def run_chart_pattern_filter(self):
-        # चार्ट पैटर्न के लिए लॉजिक यहाँ डालें।
-        return ["चार्ट पैटर्न फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
+        # चार्ट पैटर्न के लिए लॉजिक (स्थायी रूप से सरल पैटर्न)
+        stocks = ["RELIANCE", "TCS", "HDFCBANK", "INFY", "ICICIBANK"]
+        filtered_stocks = []
+
+        for stock in stocks:
+            df = self.get_stock_data(stock, period="1mo", interval="1d")
+            if not df.empty and len(df) > 10:
+                highs = df['High'].rolling(window=5).max()
+                lows = df['Low'].rolling(window=5).min()
+                if df['Close'].iloc[-1] > highs.iloc[-2] and df['Volume'].iloc[-1] > df['Volume'].mean():
+                    filtered_stocks.append(stock)
+        return filtered_stocks if filtered_stocks else ["चार्ट पैटर्न फ़िल्टर के लिए कोई स्टॉक नहीं मिला।"]
